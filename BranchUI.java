@@ -1,11 +1,12 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.*;
 
 @SuppressWarnings("serial")
 public class BranchUI extends JFrame{
-    static BranchUI branchUI ;
 
     final int WIDTH = 200, HEIGHT = 150;
     public BranchUI() {
@@ -46,13 +47,45 @@ public class BranchUI extends JFrame{
     private void drawCentre() {
         center = new JPanel();
         center.setLayout(new GridLayout(3, 1));
+        // creating the buttons
         customer = new JButton("Customer");
         employee = new JButton("Employee");
         manager = new JButton("Manager");
-        // action listeners required...
+        // adding action listeners
+        ButtonHandler handler = new ButtonHandler();
+        customer.addActionListener(handler);
+        employee.addActionListener(handler);
+        manager.addActionListener(handler);
+        // adding buttons to the canvas
         center.add(customer);
         center.add(employee);
         center.add(manager);
+        // adding the panel to the main frame
         add(center, BorderLayout.CENTER);
+    }
+
+    private class ButtonHandler implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            Object source = e.getSource();
+            if (source == customer) {
+//                System.out.print("hi customer");
+                CustomerUI customerUI = new CustomerUI();
+                customerUI.setResizable(false);
+                customerUI.setVisible(true);
+            } else if (source == employee) {
+//                System.out.print("hi employee");
+                EmployeeUI employeeUI = new EmployeeUI();
+                employeeUI.setResizable(false);
+                employeeUI.setVisible(true);
+            } else if (source == manager) {
+//                System.out.print("hi manager");
+                ManagerUI managerUI = new ManagerUI();
+                managerUI.setResizable(false);
+                managerUI.setVisible(true);
+            }
+            setVisible(false);
+            dispose();
+        }
     }
 }
