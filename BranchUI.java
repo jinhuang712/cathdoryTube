@@ -6,18 +6,19 @@ import java.awt.event.ActionListener;
 import java.io.*;
 
 @SuppressWarnings("serial")
-public class BranchUI extends JFrame{
+class BranchUI extends JFrame{
 
-    final int WIDTH = 200, HEIGHT = 150;
-    public BranchUI() {
+    private final int WIDTH = 200, HEIGHT = 150;
+    BranchUI() {
         setSize(WIDTH, HEIGHT);
         setTitle("Branch.exe");
+        setResizable(false);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         draw();
     }
 
-    JPanel north;
-    JPanel center;
+    private JPanel north;
+    private JPanel center;
     public void draw() {
         setLayout(new BorderLayout());
         drawNorth();
@@ -25,8 +26,8 @@ public class BranchUI extends JFrame{
     }
 
 
-    JLabel friendly;
-    JLabel logo;
+    private JLabel friendly;
+    private JLabel logo;
     private void drawNorth() {
         north = new JPanel();
         north.setLayout(new BorderLayout());
@@ -43,7 +44,7 @@ public class BranchUI extends JFrame{
         add(north, BorderLayout.NORTH);
     }
 
-    JButton customer, employee, manager;
+    private JButton customer, employee, manager;
     private void drawCentre() {
         center = new JPanel();
         center.setLayout(new GridLayout(3, 1));
@@ -71,18 +72,15 @@ public class BranchUI extends JFrame{
             if (source == customer) {
 //                System.out.print("hi customer");
                 CustomerUI customerUI = new CustomerUI();
-                customerUI.setResizable(false);
                 customerUI.setVisible(true);
             } else if (source == employee) {
-//                System.out.print("hi employee");
-                EmployeeUI employeeUI = new EmployeeUI();
-                employeeUI.setResizable(false);
-                employeeUI.setVisible(true);
+//                EmployeeUI employeeUI = new EmployeeUI(new Employee());
+                  EmployeeUI employeeUI = new EmployeeUI();
+//                employeeUI.setVisible(true);
             } else if (source == manager) {
 //                System.out.print("hi manager");
                 ManagerUI managerUI = new ManagerUI();
-                managerUI.setResizable(false);
-                managerUI.setVisible(true);
+               // managerUI.setVisible(true);
             }
             setVisible(false);
             dispose();
