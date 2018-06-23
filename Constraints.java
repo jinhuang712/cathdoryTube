@@ -20,12 +20,12 @@ public class Constraints {
         return false;
     }
 
-    public static boolean ifIDFormatCorrect(String id) {
-        if (id.length() == 0) return false;
+    public static boolean ifIDFormatWrong(String id) {
+        if (id.length() == 0) return true;
         for (int i = 0; i < id.length(); i++)
             if (!Character.isDigit(id.charAt(i)))
-                return false;
-        return true;
+                return true;
+        return false;
     }
 
     public static boolean ifCorrectDateFormat(String date) {

@@ -23,11 +23,6 @@ class EmployeeUI extends JFrame {
         loginUI.setVisible(true);
     }
 
-//    EmployeeUI(Employee employee) {
-//        this();
-//        this.employee = employee;
-//    }
-
     private JPanel buttonsPanel, northPanel;
     private buttonHandler handler;
     public void draw() {
@@ -71,7 +66,6 @@ class EmployeeUI extends JFrame {
 
 
     private void processPurchase() {
-        System.out.println(employee.id);
         purchase = new ProcessPurchase(employee);
         purchase.setVisible(true);
     }

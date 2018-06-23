@@ -7,8 +7,9 @@ import java.awt.event.ActionListener;
 class ManagerUI extends JFrame {
 
     Manager manager;
-    private final int WIDTH = 500, HEIGHT = 90;
+    private final int WIDTH = 500, HEIGHT = 130;
     public int managerID;
+
     ManagerUI() {
         setSize(WIDTH, HEIGHT);
         setTitle("ManagerUI");
@@ -16,7 +17,7 @@ class ManagerUI extends JFrame {
         setResizable(false);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-        this.setLocation(dim.width/2-this.getSize().width/2, dim.height/2-this.getSize().height/2);
+        this.setLocation(dim.width / 2 - this.getSize().width / 2, dim.height / 2 - this.getSize().height / 2);
         draw();
         this.manager = new Manager();
         LoginUI loginUI = new LoginUI(this, "Manager", manager);
@@ -26,6 +27,7 @@ class ManagerUI extends JFrame {
 
     private JPanel buttonsPanel, northPanel;
     private buttonHandler handler;
+
     public void draw() {
         setLayout(new BorderLayout());
         handler = new buttonHandler();
@@ -37,11 +39,13 @@ class ManagerUI extends JFrame {
 
     public void repaint() {
         setVisible(true);
-        displayID.setText(managerID+"");
+        displayID.setText(managerID + "");
     }
 
     JButton manageItem, manageEmployee, manageDeal;
-    JButton getSalesRecord, getTotalTransactionAmount, getMinWage;
+    JButton getSalesRecord, getTotalTransactionAmount, getMinMaxWage;
+    JButton getMinMaxPrice, division;
+
     private void drawButtons() {
         buttonsPanel = new JPanel();
         manageItem = new JButton("Manage Items");
@@ -50,29 +54,37 @@ class ManagerUI extends JFrame {
         manageEmployee.addActionListener(handler);
         manageDeal = new JButton("Manage Deal");
         manageDeal.addActionListener(handler);
-        buttonsPanel.setLayout(new GridLayout(2, 3));
+        buttonsPanel.setLayout(new GridLayout(3, 3));
         getSalesRecord = new JButton("Get Sales Record");
         getSalesRecord.addActionListener(handler);
         getTotalTransactionAmount = new JButton("Get Total Transaction Amount");
         getTotalTransactionAmount.addActionListener(handler);
-        getMinWage = new JButton("Get Min Wage Clerk");
-        getMinWage.addActionListener(handler);
+        getMinMaxWage = new JButton("Get Min Max Wage Clerk");
+        getMinMaxWage.addActionListener(handler);
+        getMinMaxPrice = new JButton("Get Average Item Price");
+        getMinMaxPrice.addActionListener(handler);
+        division = new JButton("Find special Purchase");
+        division.addActionListener(handler);
+
         buttonsPanel.add(manageItem);
         buttonsPanel.add(manageEmployee);
         buttonsPanel.add(manageDeal);
         buttonsPanel.add(getSalesRecord);
         buttonsPanel.add(getTotalTransactionAmount);
-        buttonsPanel.add(getMinWage);
+        buttonsPanel.add(getMinMaxWage);
+        buttonsPanel.add(getMinMaxPrice);
+        buttonsPanel.add(division);
     }
 
     private JLabel friendly, displayID;
     private JButton logOut;
+
     private void drawNorthPanel() {
         northPanel = new JPanel();
         northPanel.setLayout(new GridLayout(1, 3));
         friendly = new JLabel("Manager ID: ");
         northPanel.add(friendly);
-        displayID = new JLabel(managerID+"");
+        displayID = new JLabel(managerID + "");
         displayID.setForeground(Color.BLUE);
         northPanel.add(displayID);
         logOut = new JButton("Log Out");
@@ -85,10 +97,12 @@ class ManagerUI extends JFrame {
     private ManageDeal deals;
     private GetSalesRecord salesRecord;
     private GetTotalTransaction totalTransaction;
-    private GetMinWage minWage;
+    private GetMinMaxWage minMaxWage;
+    private GetMinMaxPrice minMaxPrice;
+    private Division Division;
+
     private class buttonHandler implements ActionListener {
         @Override
-        // todo
         public void actionPerformed(ActionEvent e) {
             Object source = e.getSource();
             if (source == manageItem) {
@@ -131,53 +145,82 @@ class ManagerUI extends JFrame {
                     totalTransaction.dispose();
                     totalTransaction = null;
                 }
-            } else if (source == getMinWage) {
-                if (minWage == null)
-                    getMinWage();
+            } else if (source == getMinMaxWage) {
+                if (minMaxWage == null)
+                    getMinMaxWage();
                 else {
-                    minWage.setVisible(false);
-                    minWage.dispose();
-                    minWage = null;
+                    minMaxWage.setVisible(false);
+                    minMaxWage.dispose();
+                    minMaxWage = null;
                 }
+            } else if (source == getMinMaxPrice) {
+                if (minMaxPrice == null)
+                    getMinMaxPrice();
+                else {
+                    minMaxPrice.setVisible(false);
+                    minMaxPrice.dispose();
+                    minMaxPrice = null;
+                }
+
+            } else if (source == division) {
+                if (Division == null)
+                    findPurchasesContainsAllItemsOnSale();
+                else {
+                    Division.setVisible(false);
+                    Division.dispose();
+                    Division = null;
+                }
+
             } else if (source == logOut) {
-                logOut();
-            }
+                    logOut();
+                }
+
         }
-    }
 
-    private void logOut() {
-        LoginUI loginUI = new LoginUI(this, "Manager", manager);
-        loginUI.setVisible(true);
-        setVisible(false);
-    }
+        private void logOut() {
+            LoginUI loginUI = new LoginUI(this, "Manager", manager);
+            loginUI.setVisible(true);
+            setVisible(false);
+        }
 
-    private void manageEmployee() {
-        employees = new ManageEmployee(manager);
-        employees.setVisible(true);
-    }
+        private void manageEmployee() {
+            employees = new ManageEmployee(manager);
+            employees.setVisible(true);
+        }
 
-    private void manageDeal() {
-        deals = new ManageDeal(manager);
-        deals.setVisible(true);
-    }
+        private void manageDeal() {
+            deals = new ManageDeal(manager);
+            deals.setVisible(true);
+        }
 
-    private void manageItem() {
-        items = new ManageItem(manager);
-        items.setVisible(true);
-    }
+        private void manageItem() {
+            items = new ManageItem(manager);
+            items.setVisible(true);
+        }
 
-    private void getSalesRecord() {
-        salesRecord = new GetSalesRecord(manager);
-        salesRecord.setVisible(true);
-    }
+        private void getSalesRecord() {
+            salesRecord = new GetSalesRecord(manager);
+            salesRecord.setVisible(true);
+        }
 
-    private void getTotalTransactionAmount() {
-        totalTransaction = new GetTotalTransaction(manager);
-        totalTransaction.setVisible(true);
-    }
+        private void getTotalTransactionAmount() {
+            totalTransaction = new GetTotalTransaction(manager);
+            totalTransaction.setVisible(true);
+        }
 
-    private void getMinWage() {
-        minWage = new GetMinWage(manager);
-        minWage.setVisible(true);
+        private void getMinMaxWage() {
+            minMaxWage = new GetMinMaxWage(manager);
+            minMaxWage.setVisible(true);
+        }
+
+        private void getMinMaxPrice() {
+            minMaxPrice = new GetMinMaxPrice(manager);
+            minMaxPrice.setVisible(true);
+        }
+
+        private void findPurchasesContainsAllItemsOnSale() {
+            Division = new Division(manager);
+            Division.setVisible(true);
+        }
     }
 }

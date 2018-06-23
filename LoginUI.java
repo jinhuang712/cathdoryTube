@@ -45,44 +45,39 @@ class LoginUI extends JFrame {
         @Override
         public void actionPerformed(ActionEvent e) {
             Object source = e.getSource();
-            if (source == logIn) {
-                int id = Integer.parseInt(id_field.getText());
-                if (character.equals("Employee")) {
-                    EmployeeUI ui = (EmployeeUI) object;
-//                    !ui.employee.validateID(id)
-                    Employee employee = (Employee) controller;
-                    if (!employee.validateID(id)) {
-                        NotificationUI notificationUI = new NotificationUI("invalid id");
-                        notificationUI.setVisible(true);
-                    } else {
+            try {
+                if (source == logIn) {
+                    if (Constraints.ifIDFormatWrong(id_field.getText()))
+                        throw new FormattingException("invalid id format");
+                    int id = Integer.parseInt(id_field.getText());
+                    if (character.equals("Employee")) {
+                        EmployeeUI ui = (EmployeeUI) object;
+                        Employee employee = (Employee) controller;
+                        employee.validateID(id);
                         ui.employeeID = id;
                         ui.repaint();
                         ui.setVisible(true);
                         setVisible(false);
                         dispose();
-                    }
-                } else if (character.equals("Manager")) {
-                    // todo
-                    ManagerUI ui = (ManagerUI) object;
-//                    !ui.employee.validateID(id)
-                    Manager manager = (Manager) controller;
-                    if (!manager.validateID(id)) {
-                        NotificationUI notificationUI = new NotificationUI("invalid id");
-                        notificationUI.setVisible(true);
-                    } else {
+                    } else if (character.equals("Manager")) {
+                        ManagerUI ui = (ManagerUI) object;
+                        Manager manager = (Manager) controller;
+                        manager.validateID(id);
                         ui.managerID = id;
                         ui.repaint();
                         ui.setVisible(true);
                         setVisible(false);
                         dispose();
                     }
-
+                } else if (source == quit) {
+                    BranchUI branchUI = new BranchUI();
+                    branchUI.setVisible(true);
+                    setVisible(false);
+                    dispose();
                 }
-            } else if (source == quit) {
-                BranchUI branchUI = new BranchUI();
-                branchUI.setVisible(true);
-                setVisible(false);
-                dispose();
+            } catch (FormattingException f) {
+                NotificationUI error = new NotificationUI(f.getMessage());
+                error.setVisible(true);
             }
         }
     }

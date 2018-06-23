@@ -31,7 +31,7 @@ public class AddMembership extends JFrame {
     }
 
     JLabel label_name, label_phone;
-    JTextArea ta_name, ta_phoneNumber;
+    JTextField ta_name, ta_phoneNumber;
     boolean modified = false;
     private void drawInputPanel() {
         inputPanel = new JPanel();
@@ -45,8 +45,8 @@ public class AddMembership extends JFrame {
         unchangable.add(label_phone);
         inputPanel.add(unchangable, BorderLayout.WEST);
         JPanel changable = new JPanel(layout);
-        ta_name = new JTextArea();
-        ta_phoneNumber = new JTextArea("xxx-xxx-xxxx");
+        ta_name = new MyTextField("First Last");
+        ta_phoneNumber = new MyTextField("xxx-xxx-xxxx");
         ta_phoneNumber.setForeground(Color.GRAY);
         ta_phoneNumber.addMouseListener(new MouseHandler());
         changable.add(ta_name);
@@ -73,18 +73,13 @@ public class AddMembership extends JFrame {
                     String phoneNumber = ta_phoneNumber.getText();
                     if (Constraints.ifNameFormattingWrong(name)) throw new FormattingException("Wrong Name Format");
                     if (Constraints.ifPhoneFormatWrong(phoneNumber)) throw new FormattingException("Wrong Phone Number Format");
-                    // todo if membership is valid
-//                    Member member = new Member();
-//                    if (member)
-                    int membershipID =  employee.manageMemberShip(name, phoneNumber);;
-                    // todo add membership
+                    int membershipID =  employee.manageMemberShip(name, phoneNumber);
                     NotificationUI ui = new NotificationUI("Member "+ta_name.getText()+" is added!",
                             "Membership# is "+membershipID, "Congratulations");
                     ui.setVisible(true);
                 } catch (FormattingException f) {
                     f.printError();
                 }
-                // todo add member to database
                 ta_name.setText("");
                 ta_phoneNumber.setText("");
             }

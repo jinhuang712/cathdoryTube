@@ -46,22 +46,24 @@ class MemberUI extends JFrame {
         @Override
         public void actionPerformed(ActionEvent e) {
             Object source = e.getSource();
-            if (source == quit) {
-                BranchUI ui = new BranchUI();
-                ui.setVisible(true);
-                setVisible(false);
-                dispose();
-            } else if (source == checkout) {
-                int memberId = Integer.parseInt(memberID.getText());
-                if(customer.validateID(memberId)) {
+            try {
+                if (source == quit) {
+                    BranchUI ui = new BranchUI();
+                    ui.setVisible(true);
+                    setVisible(false);
+                    dispose();
+                } else if (source == checkout) {
+                    if (Constraints.ifIDFormatWrong(memberID.getText()))
+                        throw new FormattingException("invalid id format");
+                    int memberId = Integer.parseInt(memberID.getText());
+                    customer.validateID(memberId);
                     int membershipPoints = customer.checkPoint();
-                    value.setText(membershipPoints+"");
-                } else {
-                    NotificationUI notificationUI = new NotificationUI("invalid Member id");
-                    notificationUI.setVisible(true);
+                    value.setText(membershipPoints + "");
                 }
+            } catch (FormattingException f) {
+                NotificationUI error = new NotificationUI(f.getMessage());
+                error.setVisible(true);
             }
-            repaint();
         }
     }
 }

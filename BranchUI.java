@@ -8,12 +8,14 @@ import java.io.*;
 @SuppressWarnings("serial")
 class BranchUI extends JFrame{
 
-    private final int WIDTH = 200, HEIGHT = 150;
+    private final int WIDTH = 200, HEIGHT = 200;
     BranchUI() {
         setSize(WIDTH, HEIGHT);
         setTitle("Branch.exe");
         setResizable(false);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+        this.setLocation(dim.width/2-this.getSize().width/2, dim.height/2-this.getSize().height/2);
         draw();
     }
 
@@ -21,31 +23,31 @@ class BranchUI extends JFrame{
     private JPanel center;
     public void draw() {
         setLayout(new BorderLayout());
-        drawNorth();
         drawCentre();
+        drawSouth();
     }
 
 
     private JLabel friendly;
     private JLabel logo;
-    private void drawNorth() {
+    private void drawCentre() {
         north = new JPanel();
         north.setLayout(new BorderLayout());
         friendly = new JLabel("Tell us about you...");
         try {
             Image image = ImageIO.read(new File("logo.jpeg"));
-            image = image.getScaledInstance(50, 50, Image.SCALE_DEFAULT);
+            image = image.getScaledInstance(70, 70, Image.SCALE_DEFAULT);
             logo = new JLabel(new ImageIcon(image));
-            north.add(logo, BorderLayout.WEST);
+            north.add(logo, BorderLayout.CENTER);
         } catch (IOException i) {
 
         }
-        north.add(friendly, BorderLayout.CENTER);
-        add(north, BorderLayout.NORTH);
+        north.add(friendly, BorderLayout.EAST);
+        add(north, BorderLayout.CENTER);
     }
 
     private JButton customer, employee, manager;
-    private void drawCentre() {
+    private void drawSouth() {
         center = new JPanel();
         center.setLayout(new GridLayout(3, 1));
         // creating the buttons
@@ -62,7 +64,7 @@ class BranchUI extends JFrame{
         center.add(employee);
         center.add(manager);
         // adding the panel to the main frame
-        add(center, BorderLayout.CENTER);
+        add(center, BorderLayout.SOUTH);
     }
 
     private class ButtonHandler implements ActionListener {
@@ -71,7 +73,7 @@ class BranchUI extends JFrame{
             Object source = e.getSource();
             if (source == customer) {
 //                System.out.print("hi customer");
-                CustomerUI customerUI = new CustomerUI();
+                MemberUI customerUI = new MemberUI();
                 customerUI.setVisible(true);
             } else if (source == employee) {
 //                EmployeeUI employeeUI = new EmployeeUI(new Employee());

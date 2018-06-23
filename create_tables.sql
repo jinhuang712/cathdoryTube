@@ -138,6 +138,7 @@ insert into Branch (branchNumber, location) values (4, '45 Knutson Pass');
 insert into Branch (branchNumber, location) values (5, '13658 Kipling Street');
 
 insert into Clerk (clerkID, name, wage, branchNumber, type) values (1252, 'Osbourn Borsay', 21, 5, 'Manager');
+insert into Clerk (clerkID, name, wage, branchNumber, type) values (1251, 'Bruce Li', 25, 1, 'Manager');
 insert into Clerk (clerkID, name, wage, branchNumber, type) values (1045, 'Sheryl Luce', 26, 2, 'Employee');
 insert into Clerk (clerkID, name, wage, branchNumber, type) values (1144, 'Willa Maciejak', 15, 4, 'Employee');
 insert into Clerk (clerkID, name, wage, branchNumber, type) values (1040, 'Helen Tulip', 27, 1, 'Employee');

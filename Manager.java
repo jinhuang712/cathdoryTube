@@ -4,12 +4,13 @@ import java.sql.*;
 
 // for reading from the command line
 
+@SuppressWarnings("ALL")
 public class Manager extends controller {
 
     public int managerID;
     private int branch;
 
-    public boolean validateID(int input) {
+    public void validateID(int input) throws FormattingException {
         int id;
         ResultSet rs;
         PreparedStatement ps;
@@ -20,16 +21,11 @@ public class Manager extends controller {
             ps = con.prepareStatement("SELECT * FROM Clerk WHERE clerkID = ? AND type = 'Manager'");
             ps.setInt(1, id);
             rs = ps.executeQuery();
-            boolean success = true;
             if (rs.next()) {
                 managerID = id;
                 branch = rs.getInt("branchNumber");
                 ps.close();
-            } else {
-                ps.close();
-                return false;
-            }
-            return success;
+            } else throw new FormattingException("invalid id");
         } catch (SQLException ex) {
             NotificationUI error = new NotificationUI(ex.getMessage());
             error.setVisible(true);
@@ -39,16 +35,15 @@ public class Manager extends controller {
                 NotificationUI error2 = new NotificationUI(ex2.getMessage());
                 error2.setVisible(true);
             }
-            return false;
         }
     }
 
-    public void manageEmployeeWage(int employeeID, int wage) throws SQLException {
+    public void manageEmployeeWage(int employeeID, int wage) throws FormattingException{
         PreparedStatement ps;
-        ps = con.prepareStatement("UPDATE Clerk SET wage = ? WHERE clerkID = ? AND branchNumber = ?");
-        ps.setInt(2, employeeID);
-        ps.setInt(3, branch);
         try {
+            ps = con.prepareStatement("UPDATE Clerk SET wage = ? WHERE clerkID = ? AND branchNumber = ?");
+            ps.setInt(2, employeeID);
+            ps.setInt(3, branch);
             if (wage < 0) {
                 throw new FormattingException("Wage Cannot be Negative");
             }
@@ -58,15 +53,14 @@ public class Manager extends controller {
                 throw new FormattingException("invalid id");
             }
             con.commit();
-        } catch (FormattingException f) {
+            ps.close();
+        } catch (SQLException f) {
             NotificationUI error = new NotificationUI(f.getMessage());
             error.setVisible(true);
-            ps.close();
         }
-        ps.close();
     }
 
-    public void showAllEmployees() throws SQLException {
+    public void displayAllEmployees() throws SQLException {
         int clerkID;
         String name;
         String type;
@@ -97,19 +91,19 @@ public class Manager extends controller {
         while (rs.next()) {
             // simplified output formatting; truncation may occur
             clerkID = rs.getInt("clerkID");
-            System.out.printf("%-5s", clerkID);
+            System.out.printf("%-15s", clerkID);
 
             name = rs.getString("name");
-            System.out.printf("%-5s", name);
+            System.out.printf("%-15s", name);
 
             wage = rs.getInt("wage");
-            System.out.printf("%-5s\n", wage);
+            System.out.printf("%-15s", wage);
 
             branchNumber = rs.getInt("branchNumber");
-            System.out.printf("%-5s", branchNumber);
+            System.out.printf("%-15s", branchNumber);
 
             type = rs.getString("type");
-            System.out.printf("%-5s", type);
+            System.out.printf("%-15s\n", type);
         }
         // close the statement;
         // the ResultSet will also be closed
@@ -163,21 +157,28 @@ public class Manager extends controller {
         int numCols = rsmd.getColumnCount();
         System.out.println(" ");
         for (int i = 0; i < numCols; i++) {
-            System.out.printf("%-15s", rsmd.getColumnName(i+1));
+            if (i == 0)
+                System.out.printf("%-15s", rsmd.getColumnName(i+1));
+            if (i == 1)
+                System.out.printf("%-30s", rsmd.getColumnName(i+1));
+            if (i == 2)
+                System.out.printf("%-10s", rsmd.getColumnName(i+1));
+            if (i == 3)
+                System.out.printf("%-15s", rsmd.getColumnName(i+1));
         }
         System.out.println(" ");
         while(rs.next()) {
             itemID = rs.getString("itemID");
-            System.out.printf("%-10.10s", itemID);
+            System.out.printf("%-17s", itemID);
 
             itemName = rs.getString("name");
-            System.out.printf("%-20.20s", itemName);
+            System.out.printf("%-22s", itemName);
 
             itemPrice = rs.getString("price");
             System.out.printf("%-20.20s", itemPrice);
 
             itemType = rs.getString("type");
-            System.out.printf("%-15.15s\n", itemType);
+            System.out.printf("%-15s\n", itemType);
 
         }
         stmt.close();
@@ -254,9 +255,8 @@ public class Manager extends controller {
         return true;
     }
 
-    public void showAllDeals() {
+    public void displayAllDeal() {
         String dealName;
-        String duration;
         int itemID;
         double percentage;
 
@@ -281,14 +281,14 @@ public class Manager extends controller {
                 // for display purposes get everything from Oracle
                 // as a string
                 // simplified output formatting; truncation may occur
-                itemID = rs.getInt("itemId");
-                System.out.printf("%-10.10s", itemID);
                 dealName = rs.getString("dealName");
                 System.out.printf("%-20.20s", dealName);
                 Timestamp startdate = rs.getTimestamp("startdate");
-                System.out.printf("%-20.20s", startdate);
+                System.out.printf("%-20.20s", startdate.toString().substring(0, 10));
                 Timestamp enddate = rs.getTimestamp("enddate");
-                System.out.printf("%-20.20s", enddate);
+                System.out.printf("%-20.20s", enddate.toString().substring(0, 10));
+                itemID = rs.getInt("itemId");
+                System.out.printf("%-10.10s", itemID);
                 percentage = rs.getDouble("persentage");
                 System.out.printf("%-15.15s\n", percentage);
             }
@@ -310,8 +310,8 @@ public class Manager extends controller {
             ps.setString(1, dealName);
             int[] timeStart = parseTimestamp(start);
             int[] timeEnd = parseTimestamp(end);
-            startDate = new java.sql.Timestamp(timeStart[0], timeStart[1], timeStart[2], 0, 0, 0, 0);
-            endDate = new java.sql.Timestamp(timeEnd[0], timeEnd[1], timeEnd[2], 0, 0, 0, 0);
+            startDate = new Timestamp(timeStart[0], timeStart[1], timeStart[2], 0, 0, 0, 0);
+            endDate = new Timestamp(timeEnd[0], timeEnd[1], timeEnd[2], 0, 0, 0, 0);
             ps.setTimestamp(2, startDate);
             ps.setTimestamp(3, endDate);
             ps.executeUpdate();
@@ -333,7 +333,7 @@ public class Manager extends controller {
 
     public void modifyDealPercent(int itemId, String name, double percentage) throws FormattingException {
         try {
-            PreparedStatement ps = con.prepareStatement("UPDATE Deal SET percentage = ? WHERE itemID = ? AND dealName = \'" + name + "\'");
+            PreparedStatement ps = con.prepareStatement("UPDATE ITEMSINDEAL SET percentage = ? WHERE itemID = ? AND dealName = \'" + name + "\'");
             ps.setDouble(1, percentage);
             ps.setInt(2, itemId);
             ps.executeUpdate();
@@ -349,7 +349,7 @@ public class Manager extends controller {
             int[] timeEnd = parseTimestamp(end);
             java.sql.Timestamp startDate = new java.sql.Timestamp(timeStart[0], timeStart[1], timeStart[2], 0, 0, 0, 0);
             java.sql.Timestamp endDate = new java.sql.Timestamp(timeEnd[0], timeEnd[1], timeEnd[2], 0, 0, 0, 0);
-            PreparedStatement ps = con.prepareStatement("UPDATE Deal d SET d.startDate = ? AND d.endDate = ? WHERE d.dealName = \'" + name + "\'");
+            PreparedStatement ps = con.prepareStatement("UPDATE Deal d SET d.startDate = ? , d.endDate = ? WHERE d.dealName = \'" + name + "\'");
             ps.setTimestamp(1, startDate);
             ps.setTimestamp(2, endDate);
             ps.executeUpdate();
@@ -363,47 +363,11 @@ public class Manager extends controller {
         // xx-xx-xx
         int[] array = new int[3];
         array[0] = Integer.parseInt(time.substring(0,2))+2000-1900;
-        array[1] = Integer.parseInt(time.substring(3, 5));
+        array[1] = Integer.parseInt(time.substring(3, 5))-1;
         array[2] = Integer.parseInt(time.substring(6, 8));
         return array;
     }
 
-    public void getMinWageFromAllBranches(){
-        int wage;
-        int branch;
-        int clerkID;
-        Statement stmt;
-        ResultSet rs;
-        try {
-            stmt = con.createStatement();
-            rs = stmt.executeQuery("SELECT MIN(wage), clerkID, branchNumber FROM Clerk GROUP BY branchNumber, clerkID");
-            ResultSetMetaData rsmd = rs.getMetaData();
-            // get number of columns
-            int numCols = rsmd.getColumnCount();
-            System.out.println(" ");
-            // display column names;
-            for (int i = 0; i < numCols; i++) {
-                // get column name and print it
-                System.out.printf("%-15s", rsmd.getColumnName(i + 1));
-            }
-            System.out.println(" ");
-            while (rs.next()) {
-                // simplified output formatting; truncation may occur
-                wage = rs.getInt("MIN(wage)");
-                System.out.printf("%-5s", wage);
-                clerkID = rs.getInt("clerkID");
-                System.out.printf("%-5s", clerkID);
-                branch = rs.getInt("branchNumber");
-                System.out.printf("%-5s\n", branch);
-            }
-            // close the statement;
-            // the ResultSet will also be closed
-            stmt.close();
-        } catch (SQLException s) {
-            NotificationUI error = new NotificationUI(s.getMessage());
-            error.setVisible(true);
-        }
-    }
 
     public void getSalesRecord(String start, String end) {
         int receiptNumber;
@@ -413,48 +377,46 @@ public class Manager extends controller {
         int branchNumber;
         int[] timeStart = parseTimestamp(start);
         int[] timeEnd = parseTimestamp(end);
-        java.sql.Timestamp startDate = new java.sql.Timestamp(timeStart[0], timeStart[1], timeStart[2], 0, 0, 0, 0);
+        java.sql.Timestamp startDate = new java.sql.Timestamp(timeStart[0], timeStart[1] , timeStart[2], 0, 0, 0, 0);
         java.sql.Timestamp endDate = new java.sql.Timestamp(timeEnd[0], timeEnd[1], timeEnd[2], 0, 0, 0, 0);
         try {
             PreparedStatement ps;
             ResultSet rs;
 
             ps = con.prepareStatement("SELECT * FROM Purchase WHERE purchaseTime >= ? AND purchaseTime <= ? AND branchNumber = ?");
-            ps.setTimestamp(1, endDate);
-            ps.setTimestamp(2, startDate);
+            ps.setTimestamp(2, endDate);
+            ps.setTimestamp(1, startDate);
 
             ps.setInt(3, branch);
 
             rs = ps.executeQuery();
             // get info on ResultSet
-            ResultSetMetaData rsmd = rs.getMetaData();
-            // get number of columns
-            int numCols = rsmd.getColumnCount();
 
             System.out.println(" ");
 
             // display column names;
-            for (int i = 0; i < numCols; i++) {
-                // get column name and print it
-                System.out.printf("%-15s", rsmd.getColumnName(i + 1));
-            }
+            System.out.printf("%-14s", "R.ID" );
+            System.out.printf("%-30s","purchaseTime");
+            System.out.printf("%-14s", "totalPrice");
+            System.out.printf("%-13s", "clerkID");
+            System.out.printf("%-10s", "branchNumber");
 
             System.out.println(" ");
             while (rs.next()) {
                 receiptNumber = rs.getInt("receiptNumber");
-                System.out.printf("%-10.10s", receiptNumber);
+                System.out.printf("%-13.13s", receiptNumber);
 
                 purchaseTime = rs.getTimestamp("purchaseTime");
-                System.out.printf("%-20.20s", purchaseTime);
+                System.out.printf("%-25.25s", purchaseTime);
 
                 totalPrice = rs.getDouble("totalPrice");
-                System.out.printf("%-15.15s", totalPrice);
+                System.out.printf("%-16.10s", totalPrice);
 
                 clerkID = rs.getInt("clerkID");
-                System.out.printf("%-15.15s", clerkID);
+                System.out.printf("%-15.7s", clerkID);
 
                 branchNumber = rs.getInt("branchNumber");
-                System.out.printf("%-15.15s\n", branchNumber);
+                System.out.printf("%-10.10s\n", branchNumber);
 
                 // close the statement;
                 // the ResultSet will also be closed
@@ -476,8 +438,8 @@ public class Manager extends controller {
         java.sql.Timestamp startDate = new java.sql.Timestamp(timeStart[0], timeStart[1], timeStart[2], 0, 0, 0, 0);
         java.sql.Timestamp endDate = new java.sql.Timestamp(timeEnd[0], timeEnd[1], timeEnd[2], 0, 0, 0, 0);
         try {
-            ps = con.prepareStatement("SELECT SUM(totalPrice) AS SUM, COUNT(receiptNumber) AS CON FROM Purchase WHERE purchaseTime <= ? AND branchNumber = ?");
-            //ps = con.prepareStatement("SELECT SUM(totalPrice) AS SUM, COUNT(receiptNumber) AS CON FROM Purchase WHERE purchaseTime >= '2015-01-01 0:0:0' AND branchNumber = 05");
+//            ps = con.prepareStatement("SELECT SUM(totalPrice) AS SUM, COUNT(receiptNumber) AS CON FROM Purchase WHERE purchaseTime <= ? AND branchNumber = ?");
+            ps = con.prepareStatement("SELECT SUM(totalPrice) AS SUM, COUNT(receiptNumber) AS CON FROM Purchase WHERE purchaseTime >= ? AND branchNumber = ?");
             ps.setTimestamp(1, startDate);
             ps.setInt(2, branch);
             rs = ps.executeQuery();
@@ -490,7 +452,7 @@ public class Manager extends controller {
             System.out.println(" ");
             while (rs.next()) {
                 totalPrice = rs.getDouble("SUM");
-                System.out.printf("%-10s", totalPrice);
+                System.out.printf("%-15s", totalPrice);
                 count = rs.getInt("CON");
                 System.out.printf("%-5s", count);
             }
@@ -499,6 +461,139 @@ public class Manager extends controller {
             NotificationUI ui = new NotificationUI(s.getMessage());
             ui.setVisible(true);
         }
+    }
+
+    public void findPurchasesContainsAllItemsOnSale() {
+        int receiptNumber;
+        Statement stmt;
+        ResultSet rs;
+        try {
+            stmt = con.createStatement();
+            rs = stmt.executeQuery("select distinct ip.receiptNumber from ItemsInPurchase ip where not exists (select iind.itemID from ItemsInDeal iind Minus select iinp.itemID from ItemsInPurchase iinp where iinp.receiptNumber = ip.receiptNumber)");
+            ResultSetMetaData rsmd = rs.getMetaData();
+            // get number of columns
+            int numCols = rsmd.getColumnCount();
+            // if (!rs.next()) {
+            //     System.out.println("no such purchase found! ");
+            System.out.println(" ");
+            // display column names;
+            for (int i = 0; i < numCols; i++) {
+                // get column name and print it
+                System.out.printf("%-15s", rsmd.getColumnName(i + 1));
+            }
+            System.out.println(" ");
+            while (rs.next()) {
+                // for display purposes get everything from Oracle
+                // as a string
+                // simplified output formatting; truncation may occur
+                receiptNumber = rs.getInt("receiptNumber");
+                System.out.printf("%-10.10s\n", receiptNumber);
+            }
+            // close the statement;
+            // the ResultSet will also be closed
+            stmt.close();
+        }catch (SQLException e){
+            NotificationUI ui = new NotificationUI(e.getMessage());
+            ui.setVisible(true);
+        }
+    }
+
+    public void getMaxWageFromAllBranches(){
+        int wage;
+        int branch;
+        int clerkID;
+        Statement stmt;
+        ResultSet rs;
+        try {
+            stmt = con.createStatement();
+            rs = stmt.executeQuery("SELECT MAX(wage), branchNumber FROM Clerk GROUP BY branchNumber");
+            ResultSetMetaData rsmd = rs.getMetaData();
+            // get number of columns
+            int numCols = rsmd.getColumnCount();
+            // display column names;
+            for (int i = 0; i < numCols; i++) {
+                // get column name and print it
+                System.out.printf("%-15s", rsmd.getColumnName(i + 1));
+            }
+            System.out.println(" ");
+            while (rs.next()) {
+                // simplified output formatting; truncation may occur
+                wage = rs.getInt("MAX(wage)");
+                System.out.printf("%-25s", wage);
+//                clerkID = rs.getInt("clerkID");
+//                System.out.printf("%-5s", clerkID);
+                branch = rs.getInt("branchNumber");
+                System.out.printf("%-5s\n", branch);
+            }
+            // close the statement;
+            // the ResultSet will also be closed
+            stmt.close();
+        } catch (SQLException s) {
+            NotificationUI error = new NotificationUI(s.getMessage());
+            error.setVisible(true);
+        }
+    }
+
+    public void getMinWageFromAllBranches(){
+        int wage;
+        int branch;
+        int clerkID;
+        Statement stmt;
+        ResultSet rs;
+        try {
+            stmt = con.createStatement();
+            rs = stmt.executeQuery("SELECT MIN(wage), branchNumber FROM Clerk GROUP BY branchNumber");
+            ResultSetMetaData rsmd = rs.getMetaData();
+            // get number of columns
+            int numCols = rsmd.getColumnCount();
+            // display column names;
+            for (int i = 0; i < numCols; i++) {
+                // get column name and print it
+                System.out.printf("%-15s", rsmd.getColumnName(i + 1));
+            }
+            System.out.println(" ");
+            while (rs.next()) {
+                // simplified output formatting; truncation may occur
+                wage = rs.getInt("MIN(wage)");
+                System.out.printf("%-25s", wage);
+//                clerkID = rs.getInt("clerkID");
+//                System.out.printf("%-5s", clerkID);
+                branch = rs.getInt("branchNumber");
+                System.out.printf("%-5s\n", branch);
+            }
+            // close the statement;
+            // the ResultSet will also be closed
+            stmt.close();
+        } catch (SQLException s) {
+            NotificationUI error = new NotificationUI(s.getMessage());
+            error.setVisible(true);
+        }
+    }
+
+    public void getMaxAvgItemPrice() {
+        try {
+            Statement stmt = con.createStatement();
+            ResultSet rs;
+            rs = stmt.executeQuery("SELECT MAX(price) as Max_price FROM (SELECT AVG(price) AS price FROM Item I, Storage S WHERE I.itemID = S.itemID GROUP BY branchNumber)");
+            rs.next();
+            double max_price = rs.getDouble("Max_price");
+            System.out.println("Max avg price: "+ max_price);
+        } catch (SQLException s) {
+            System.out.println("SQL exception MAx avg");
+        }
+
+    }
+    public void getMinAvgItemPrice() {
+        try {
+            Statement stmt = con.createStatement();
+            ResultSet rs;
+            rs = stmt.executeQuery("SELECT MIN(price) as MIN_price FROM (SELECT AVG(price) AS PRICE FROM ITEM I, Storage S WHERE I.itemID = S.itemID GROUP BY branchNumber)");
+            rs.next();
+            System.out.println("Min avg price: "+rs.getDouble("Min_price"));
+        } catch (SQLException se){
+            System.out.println("SQl exception Min avg");
+        }
+
     }
 
 }

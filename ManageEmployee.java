@@ -2,14 +2,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.SQLException;
 
 @SuppressWarnings("Serial")
 public class ManageEmployee extends JFrame {
 
-    private final int WIDTH = 700, HEIGHT = 700;
+    private final int WIDTH = 700, HEIGHT = 500;
     private Manager manager;
     public ManageEmployee(Manager manager) {
         setSize(WIDTH, HEIGHT);
@@ -42,7 +41,7 @@ public class ManageEmployee extends JFrame {
         System.setOut(out);
         System.setErr(out);
         try {
-            manager.showAllEmployees();
+            manager.displayAllEmployees();
         } catch (SQLException s) {
             NotificationUI error = new NotificationUI(s.getMessage());
             error.setVisible(true);
@@ -78,26 +77,22 @@ public class ManageEmployee extends JFrame {
 
     private class buttonHandler implements ActionListener {
         @Override
-        // todo
         public void actionPerformed(ActionEvent e) {
             Object source = e.getSource();
             try {
                 if (source == changeWage) {
                     String id = tf_employeeID.getText();
                     String wage = tf_wage.getText();
-                    if (!Constraints.ifIDFormatCorrect(id))
+                    if (Constraints.ifIDFormatWrong(id))
                         throw new FormattingException("Invalid Entry");
-                    if (!Constraints.ifIDFormatCorrect(wage))
+                    if (Constraints.ifIDFormatWrong(wage))
                         throw new FormattingException("Invalid Entry");
                     area.setText("");
                     manager.manageEmployeeWage(Integer.parseInt(id), Integer.parseInt(wage));
-                    manager.showAllEmployees();
+                    manager.displayAllEmployees();
                 }
             } catch (FormattingException f) {
                 NotificationUI ui = new NotificationUI(f.getMessage());
-                ui.setVisible(true);
-            } catch (IOException i) {
-                NotificationUI ui = new NotificationUI(i.getMessage());
                 ui.setVisible(true);
             } catch (SQLException s) {
                 NotificationUI ui = new NotificationUI(s.getMessage());

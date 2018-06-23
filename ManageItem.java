@@ -8,7 +8,7 @@ import java.sql.SQLException;
 @SuppressWarnings("Serial")
 public class ManageItem extends JFrame {
 
-    private final int WIDTH = 400, HEIGHT = 700;
+    private final int WIDTH = 600, HEIGHT = 500;
     private Manager manager;
     public ManageItem(Manager manager) {
         setSize(WIDTH, HEIGHT);
@@ -129,7 +129,7 @@ public class ManageItem extends JFrame {
         public void drawFieldPanel() {
             fieldPanel = new JPanel(new GridLayout(2, 1));
             tf_itemNumber = new JTextField();
-            tf_price = new JTextField();
+            tf_price = new MyTextField("Enter a Decimal");
             fieldPanel.add(tf_itemNumber);
             fieldPanel.add(tf_price);
         }

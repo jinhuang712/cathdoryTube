@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.sql.*;
 import java.util.Random;
 
@@ -11,7 +10,6 @@ public class Employee extends controller {
         PreparedStatement ps;
         ResultSet rs;
         int id = 0;
-        int point;
         boolean current = false;
         Random r = new Random();
         try {
@@ -41,14 +39,8 @@ public class Employee extends controller {
     }
 
     public int processPurchase() {
-        int itemid;
-        int lastItem = 0;
-        double[] price_id = {0,0};
-        double price;
-        double totalPrice = 0;
         int receiptNumber = 0;
         boolean current = false;
-        boolean finish = false;
         PreparedStatement ps;
         ResultSet rs;
         Random r = new Random();
@@ -77,13 +69,12 @@ public class Employee extends controller {
         }catch (SQLException e){
             NotificationUI error = new NotificationUI(e.getMessage());
             error.setVisible(true);
-            System.exit(-1);
         }
         return  receiptNumber;
 
     }
-//
-    public boolean validateID(int eid) {
+
+    public void validateID(int eid) throws FormattingException {
         PreparedStatement ps;
         ResultSet rs;
         try {
@@ -93,7 +84,7 @@ public class Employee extends controller {
             ps.setInt(1, eid);
             rs = ps.executeQuery();
             if (!rs.next()) {
-                return false;
+                throw new FormattingException("invalid id");
             } else {
                 this.branch = rs.getInt("branchNumber");
                 this.id = eid;
@@ -102,19 +93,10 @@ public class Employee extends controller {
         } catch (SQLException ex) {
             NotificationUI error = new NotificationUI(ex.getMessage());
             error.setVisible(true);
-            try {
-                con.rollback();
-            }
-            catch (SQLException ex2)
-            {
-                NotificationUI error2 = new NotificationUI(ex2.getMessage());
-                error.setVisible(true);
-            }
         }
-        return true;
     }
 
-    public void showPurchase(int receiptNumber, double totalPrice) throws SQLException {
+    public void showPurchase(int receiptNumber, double totalPrice) {
         String     itemID;
         String     itemName;
         double    itemPrice;
@@ -169,153 +151,175 @@ public class Employee extends controller {
 
     }
 
-    public double[] addItem(int itemid, int receiptNumber) throws SQLException{
-        PreparedStatement  ps;
-        ResultSet  rs;
+    public double[] addItem(int itemid, int receiptNumber) {
         double[] rvalue = new double[2];
-        ps = con.prepareStatement("SELECT * FROM item WHERE itemID = ?");
-        ps.setInt(1, itemid);
-        rs = ps.executeQuery();
-        if (!rs.next()) {
-            NotificationUI notificationUI = new NotificationUI("invalid Item ID");
-            notificationUI.setVisible(true);
-        }
-        else {
-            rvalue[0] = rs.getDouble("price");
-            rvalue[1] = itemid;
-            ps = con.prepareStatement("SELECT * FROM itemsInPurchase WHERE itemID = ? AND receiptNumber = ?");
+        try {
+            PreparedStatement ps;
+            ResultSet rs;
+            ps = con.prepareStatement("SELECT * FROM item WHERE itemID = ?");
             ps.setInt(1, itemid);
-            ps.setInt(2, receiptNumber);
             rs = ps.executeQuery();
             if (!rs.next()) {
-                ps = con.prepareStatement("INSERT INTO itemsInPurchase VALUES (?,?,1)");
-                ps.setInt(1, receiptNumber);
-                ps.setInt(2, itemid);
+                NotificationUI notificationUI = new NotificationUI("invalid Item ID");
+                notificationUI.setVisible(true);
+            } else {
+                rvalue[0] = rs.getDouble("price");
+                rvalue[1] = itemid;
+                ps = con.prepareStatement("SELECT * FROM itemsInPurchase WHERE itemID = ? AND receiptNumber = ?");
+                ps.setInt(1, itemid);
+                ps.setInt(2, receiptNumber);
+                rs = ps.executeQuery();
+                if (!rs.next()) {
+                    ps = con.prepareStatement("INSERT INTO itemsInPurchase VALUES (?,?,1)");
+                    ps.setInt(1, receiptNumber);
+                    ps.setInt(2, itemid);
+                    ps.executeUpdate();
+                } else {
+                    ps = con.prepareStatement("UPDATE itemsInPurchase SET amount = ? WHERE itemID = ? AND receiptNumber = ?");
+                    ps.setInt(3, receiptNumber);
+                    ps.setInt(2, itemid);
+                    ps.setInt(1, rs.getInt("amount") + 1);
+                    ps.executeUpdate();
+                }
+                con.commit();
+                ps.close();
+            }
+            ps.close();
+        } catch (SQLException s) {
+            NotificationUI error = new NotificationUI(s.getMessage());
+            error.setVisible(true);
+        }
+        return rvalue;
+    }
+
+    public void deleteLastItem(int lastItem, int receiptNumber){
+        try {
+            PreparedStatement ps;
+            ResultSet rs;
+            int amount;
+            ps = con.prepareStatement("SELECT * FROM itemsInPurchase WHERE itemID = ? AND receiptNumber = ?");
+            ps.setInt(1, lastItem);
+            ps.setInt(2, receiptNumber);
+            rs = ps.executeQuery();
+            rs.next();
+            amount = rs.getInt("amount");
+            if (amount == 1) {
+                ps = con.prepareStatement("DELETE FROM ItemsInPurchase WHERE itemID = ? AND receiptNumber = ?");
+                ps.setInt(1, lastItem);
+                ps.setInt(2, receiptNumber);
                 ps.executeUpdate();
+
             } else {
                 ps = con.prepareStatement("UPDATE itemsInPurchase SET amount = ? WHERE itemID = ? AND receiptNumber = ?");
                 ps.setInt(3, receiptNumber);
-                ps.setInt(2, itemid);
-                ps.setInt(1, rs.getInt("amount") + 1);
+                ps.setInt(2, lastItem);
+                System.out.println(amount - 1);
+                ps.setInt(1, amount - 1);
                 ps.executeUpdate();
             }
             con.commit();
             ps.close();
-
+        } catch (SQLException s) {
+            NotificationUI error = new NotificationUI(s.getMessage());
+            error.setVisible(true);
         }
-        ps.close();
-        return rvalue;
-
     }
 
-
-    public void deleteLastItem(int lastItem, int receiptNumber) throws SQLException{
-        PreparedStatement  ps;
-        ResultSet  rs;
-        int amount;
-        double price;
-        ps = con.prepareStatement("SELECT * FROM itemsInPurchase WHERE itemID = ? AND receiptNumber = ?");
-        ps.setInt(1,lastItem);
-        ps.setInt(2,receiptNumber);
-        rs = ps.executeQuery();
-        rs.next();
-        amount = rs.getInt("amount");
-        if(amount == 1){
-            ps = con.prepareStatement("DELETE FROM ItemsInPurchase WHERE itemID = ? AND receiptNumber = ?");
-            ps.setInt(1,lastItem);
-            ps.setInt(2,receiptNumber);
-            ps.executeUpdate();
-
-        }
-        else {
-            ps = con.prepareStatement("UPDATE itemsInPurchase SET amount = ? WHERE itemID = ? AND receiptNumber = ?");
-            ps.setInt(3, receiptNumber);
-            ps.setInt(2, lastItem);
-            System.out.println(amount - 1);
-            ps.setInt(1,amount - 1);
-            ps.executeUpdate();
-        }
-        con.commit();
-        ps.close();
-
-    }
-
-    public double deleteItemHelper (int itemId, int receiptNumber) throws SQLException{
-        PreparedStatement  ps;
-        ResultSet  rs;
+    public double deleteItemHelper (int itemId, int receiptNumber){
         double price = 0;
-        boolean vaildItem = true;
-        ps = con.prepareStatement("SELECT * FROM item WHERE itemID = ?");
-        ps.setInt(1, itemId);
-        rs = ps.executeQuery();
-        if(!rs.next())
-            vaildItem = false;
-        else
-            price = rs.getDouble("price");
-        ps = con.prepareStatement("SELECT * FROM itemsInPurchase WHERE itemID = ? AND receiptNumber = ?");
-        ps.setInt(1,itemId);
-        ps.setInt(2,receiptNumber);
-        rs = ps.executeQuery();
-        if(!rs.next()) {
-            vaildItem = false;
+        try {
+            PreparedStatement ps;
+            ResultSet rs;
             price = 0;
+            boolean vaildItem = true;
+            ps = con.prepareStatement("SELECT * FROM item WHERE itemID = ?");
+            ps.setInt(1, itemId);
+            rs = ps.executeQuery();
+            if (!rs.next())
+                vaildItem = false;
+            else
+                price = rs.getDouble("price");
+            ps = con.prepareStatement("SELECT * FROM itemsInPurchase WHERE itemID = ? AND receiptNumber = ?");
+            ps.setInt(1, itemId);
+            ps.setInt(2, receiptNumber);
+            rs = ps.executeQuery();
+            if (!rs.next()) {
+                vaildItem = false;
+                price = 0;
+            } if (vaildItem)
+                deleteLastItem(itemId, receiptNumber);
+            else {
+                NotificationUI notificationUI = new NotificationUI("invalid Item ID or Item doesn't in the list");
+                notificationUI.setVisible(true);
+            }
+            ps.close();
+        } catch (SQLException s) {
+            NotificationUI ui = new NotificationUI(s.getMessage());
+            ui.setVisible(true);
         }
-        if(vaildItem)
-            deleteLastItem(itemId,receiptNumber);
-        else {
-            NotificationUI notificationUI = new NotificationUI("invalid Item ID or Item doesn't in the list");
-            notificationUI.setVisible(true);
-        }
-        ps.close();
         return price;
     }
 
-    public void purchaseQuit(int receiptNumber) throws SQLException{
-        PreparedStatement ps;
-        ps = con.prepareStatement("DELETE FROM Purchase WHERE receiptNumber = ?");
-        ps.setInt(1,receiptNumber);
-        ps.executeUpdate();
-        con.commit();
-        ps.close();
-        System.out.println("\nPurchase canceled");
-    }
-
-    public void purchaseFinish(int receiptNumber, double totalPrice) throws SQLException{
-        PreparedStatement ps;
-        ResultSet  rs;
-        ResultSet  rs1;
-        ps = con.prepareStatement("UPDATE Purchase SET totalPrice = ? WHERE receiptNumber = ?");
-        ps.setDouble(1,totalPrice);
-        ps.setInt(2,receiptNumber);
-        ps.executeUpdate();
-        ps = con.prepareStatement("SELECT * FROM Item i, ItemsInPurchase ip WHERE ip.receiptNumber = ? and i.itemID = ip.itemID");
-        ps.setInt(1, receiptNumber);
-        rs = ps.executeQuery();
-        while (rs.next()) {
-            int itemID = rs.getInt("itemID");
-            int itemAmount = rs.getInt("amount");
-            updateStorage(itemID,itemAmount);
+    public void purchaseQuit(int receiptNumber){
+        try {
+            PreparedStatement ps;
+            ps = con.prepareStatement("DELETE FROM Purchase WHERE receiptNumber = ?");
+            ps.setInt(1, receiptNumber);
+            ps.executeUpdate();
+            con.commit();
+            ps.close();
+            System.out.println("\nPurchase canceled");
+        } catch (SQLException s) {
+            NotificationUI ui = new NotificationUI(s.getMessage());
+            ui.setVisible(true);
         }
-        ps.close();
     }
 
-    private void updateStorage(int itemID, int amount) throws SQLException{
+    public void purchaseFinish(int receiptNumber, double totalPrice) {
         PreparedStatement ps;
         ResultSet  rs;
-        int totalamount;
-        ps = con.prepareStatement("SELECT * FROM Storage WHERE itemID = ? AND branchNumber = ?");
-        ps.setInt(1, itemID);
-        ps.setInt(2, branch);
-        rs = ps.executeQuery();
-        rs.next();
-        totalamount = rs.getInt("amount");
-        ps = con.prepareStatement("UPDATE Storage SET amount = ? WHERE itemID = ? AND branchNumber = ?");
-        ps.setInt(2, itemID);
-        ps.setInt(3, branch);
-        ps.setInt(1, totalamount - amount);
-        ps.executeQuery();
-        con.commit();
-        ps.close();
+        try {
+            ps = con.prepareStatement("UPDATE Purchase SET totalPrice = ? WHERE receiptNumber = ?");
+            ps.setDouble(1, totalPrice);
+            ps.setInt(2, receiptNumber);
+            ps.executeUpdate();
+            ps = con.prepareStatement("SELECT * FROM Item i, ItemsInPurchase ip WHERE ip.receiptNumber = ? and i.itemID = ip.itemID");
+            ps.setInt(1, receiptNumber);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                int itemID = rs.getInt("itemID");
+                int itemAmount = rs.getInt("amount");
+                updateStorage(itemID, itemAmount);
+            }
+            ps.close();
+        } catch (SQLException s) {
+            NotificationUI ui = new NotificationUI(s.getMessage());
+            ui.setVisible(true);
+        }
+    }
+
+    private void updateStorage(int itemID, int amount) {
+        try {
+            PreparedStatement ps;
+            ResultSet rs;
+            int totalamount;
+            ps = con.prepareStatement("SELECT * FROM Storage WHERE itemID = ? AND branchNumber = ?");
+            ps.setInt(1, itemID);
+            ps.setInt(2, branch);
+            rs = ps.executeQuery();
+            rs.next();
+            totalamount = rs.getInt("amount");
+            ps = con.prepareStatement("UPDATE Storage SET amount = ? WHERE itemID = ? AND branchNumber = ?");
+            ps.setInt(2, itemID);
+            ps.setInt(3, branch);
+            ps.setInt(1, totalamount - amount);
+            ps.executeQuery();
+            con.commit();
+            ps.close();
+        } catch (SQLException s) {
+            NotificationUI ui = new NotificationUI(s.getMessage());
+            ui.setVisible(true);
+        }
 
     }
 
